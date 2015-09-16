@@ -22,6 +22,8 @@ client.config('general:navdata_demo', 'FALSE');
 //
 // video.pipe(parser);
 
+console.log("no")
+
 client.takeoff(function() {
     console.log("k")
     client.land(function() {
