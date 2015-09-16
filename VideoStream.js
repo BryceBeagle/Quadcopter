@@ -24,8 +24,6 @@ client.config('general:navdata_demo', 'FALSE');
 
 client.disableEmergency()
 
-console.log("no")
-
 client.takeoff(function() {
     console.log("k")
     client.land(function() {
