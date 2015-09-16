@@ -22,6 +22,8 @@ client.config('general:navdata_demo', 'FALSE');
 //
 // video.pipe(parser);
 
+client.disableEmergency()
+
 console.log("no")
 
 client.takeoff(function() {
