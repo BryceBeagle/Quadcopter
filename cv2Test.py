@@ -1,42 +1,79 @@
 import cv2
-import numpy as np
+from threading import Thread
 
 # Import local libardrone from python-ardrone git clone
-import sys
-sys.path.append('./python-ardrone/')
-import libardrone
+# Note: Renamed to python-ardrone to to avoid errors
+from python_ardrone import libardrone
+
+
 def main():
+    global frame
+    global frameMod
+
+    # Is the video still active
+    global running
+    running = True
+
+    # Initialize frame and frameMod to None to help mitigate race conditions
+    frame, frameMod = None
+
+    robotThread = Thread(target = detectFaces)
+    robotThread.start()
+
     # Get Video Stream from Quadcopter
     vid = cv2.VideoCapture('tcp://192.168.1.1:5555')
 
-    faceCascade = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
-
-    # Is the Video Still active
-    running = True
-
     while running:
-         # Get current frame of Video Stream
-         running, frame = vid.read()
-         if running:
+        # Get current frame of Video Stream
+        running, frame = vid.read()
 
-             # Create grayscale version of video feed for OpenCV
-             grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if running:
 
-             # Detect faces in current frame
-             #detectFaces(faceCascade, grayscale, frame)
-             cv2.imshow('frame', frame)
-             if cv2.waitKey(1) & 0xFF == 27:
-                 # Escape Key pressed
-                 running = false
+            # Check if frameMod has been initialized
+            if len(frameMod):
+
+                # Draw current frame to OpenCV window
+                cv2.imshow('frame', frameMod)
+
+            # Wait for escape character (Escape Key) to be pressed. Once pressed, OpenCV window is closed
+            if cv2.waitKey(1) & 0xFF == 27:
+                running = False
+
     vid.release()
     cv2.destroyAllWindows()
 
-def detectFaces(faceCascade, grayscale, frame):
-    # Create array of faces found using Haar Cascade face detection algorithm
-    faces = faceCascade.detectMultiScale(grayscale, 1.3, 5)
+    robotThread.join(1000)
 
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+
+def detectFaces():
+    """Detect faces in current frame"""
+
+    # Current frame of Video Stream
+    global frame
+
+    # Modified frame for OpenCV
+    global frameMod
+
+    global running
+
+    faceCascade = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
+
+    while running:
+
+        # Check if frame has been initialized
+        if len(frame):
+            frameMod = frame.copy()
+
+            # Create grayscale version of video feed for OpenCV
+            grayscale = cv2.cvtColor(frameMod, cv2.COLOR_BGR2GRAY)
+
+            # Create array of faces found using Haar Cascade face detection algorithm
+            faces = faceCascade.detectMultiScale(grayscale, 1.3, 5)
+
+            for (x, y, w, h) in faces:
+                cv2.rectangle(frameMod, (x, y), (x + w, y + h), (0, 0, 255), 2)
+
 
 if __name__ == '__main__':
     main()
+
