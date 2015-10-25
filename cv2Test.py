@@ -1,7 +1,7 @@
 import cv2
 from threading import Thread, Semaphore
 
-# Create an instance of the Lock class
+# Create semaphores
 drawFrameSemaphore = Semaphore()
 frameStepSemaphore = Semaphore()
 
