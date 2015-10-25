@@ -1,5 +1,9 @@
 import cv2
-from threading import Thread
+from threading import Thread, Semaphore
+
+# Create an instance of the Lock class
+drawFrameSemaphore = Semaphore()
+frameStepSemaphore = Semaphore()
 
 # Import local libardrone from python-ardrone git clone
 # Note: Renamed to python-ardrone to to avoid errors
@@ -9,8 +13,7 @@ from python_ardrone import libardrone
 def main():
     """Main thread which handles getting video from Quadcopter Stream"""
 
-    global frame
-    global frameMod
+    global frame, drawFrameMod, faces
 
     frontVideoIP = 'tcp://192.168.1.1:5555'
 
@@ -18,11 +21,14 @@ def main():
     global running
     running = True
 
-    # Initialize frame and frameMod to None to help mitigate race conditions
-    frame, frameMod = None, None
+    # Initialize frame, drawFrameMod, and faces to None to help mitigate race conditions
+    frame, drawFrameMod, faces = None, None, None
 
-    robotThread = Thread(target = detectFaces)
-    robotThread.start()
+    detectThread = Thread(target = detectFaces)
+    drawThread   = Thread(target = drawFaces)
+
+    detectThread.start()
+    drawThread.start()
 
     # Get Video Stream from Quadcopter
     videoStream = cv2.VideoCapture(frontVideoIP)
@@ -31,13 +37,17 @@ def main():
         # Get current frame of Video Stream
         running, frame = videoStream.read()
 
+        frameStepSemaphore.release()
+
         if not running: break
 
         # Skip canvas drawing until first frame of Video Stream is found
-        if frameMod is None: continue
+        if drawFrameMod is None: continue
+
+        drawFrameSemaphore.acquire()
 
         # Draw current frame to OpenCV window
-        cv2.imshow('Video Stream', frameMod)
+        cv2.imshow('Video Stream', drawFrameMod)
 
         # Wait for escape character (Escape Key) to be pressed. Once pressed, OpenCV window is closed
         if cv2.waitKey(1) & 0xFF == 27:
@@ -46,16 +56,15 @@ def main():
     videoStream.release()
     cv2.destroyAllWindows()
 
-    robotThread.join(1000)
+    detectThread.join(1000)
+    drawThread.join(1000)
 
 
 def detectFaces():
     """Detect faces in current frame"""
 
     # Modified frame for use with OpenCV
-    global frameMod
-
-    global currentState
+    global frameMod, faces
 
     faceCascade = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
 
@@ -64,16 +73,33 @@ def detectFaces():
         # Skip face detection until first frame of Video Stream is found
         if frame is None: continue
 
-        frameMod = frame.copy()
+        detectFrameMod = frame.copy()
 
         # Create grayscale version of video feed for OpenCV
-        grayscale = cv2.cvtColor(frameMod, cv2.COLOR_BGR2GRAY)
+        grayscale = cv2.cvtColor(detectFrameMod, cv2.COLOR_BGR2GRAY)
 
-        # Create array of faces found using Haar Cascade face detection algorithm
+        # Create array of faces using Haar Cascade face detection algorithm
         faces = faceCascade.detectMultiScale(grayscale, 1.3, 5)
 
+
+def drawFaces():
+
+    global drawFrameMod
+
+    while running:
+
+        frameStepSemaphore.acquire()
+
+        if frame is None or faces is None: continue
+
+        drawFrameMod = frame.copy()
+
         for (x, y, w, h) in faces:
-            cv2.rectangle(frameMod, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            cv2.rectangle(drawFrameMod, (x, y), (x + w, y + h), (0, 0, 255), 2)
+
+        # Denote the current frame as finished
+        drawFrameSemaphore.release()
+
 
 if __name__ == '__main__':
     main()
