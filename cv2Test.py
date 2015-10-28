@@ -1,17 +1,27 @@
 import cv2
 from threading import Thread, Semaphore
 
-# Create semaphores
-drawFrameSemaphore = Semaphore()
-frameStepSemaphore = Semaphore()
+from OpenCVOps import ImageTransformLib
 
 # Import local libardrone from python-ardrone git clone
 # Note: Renamed to python-ardrone to to avoid errors
 from python_ardrone import libardrone
 
+# Create semaphores
+drawFrameSemaphore = Semaphore()
+frameStepSemaphore = Semaphore()
+
+convert = ImageTransformLib.ImageTransform()
+
+drone = libardrone.ARDrone()
+
 
 def main():
     """Main thread which handles getting video from Quadcopter Stream"""
+
+    # Use the belly camera
+    libardrone.at_config(drone.seq_nr + 1, "video:video_channel", 1)
+
 
     global frame, drawFrameMod, faces
 
@@ -24,11 +34,8 @@ def main():
     # Initialize frame, drawFrameMod, and faces to None to help mitigate race conditions
     frame, drawFrameMod, faces = None, None, None
 
-    detectThread = Thread(target = detectFaces)
-    drawThread   = Thread(target = drawFaces)
-
-    detectThread.start()
-    drawThread.start()
+    isolateThread = Thread(target = isolateColor)
+    isolateThread.start()
 
     # Get Video Stream from Quadcopter
     videoStream = cv2.VideoCapture(frontVideoIP)
@@ -46,6 +53,8 @@ def main():
 
         drawFrameSemaphore.acquire()
 
+        print drawFrameMod
+
         # Draw current frame to OpenCV window
         cv2.imshow('Video Stream', drawFrameMod)
 
@@ -56,51 +65,27 @@ def main():
     videoStream.release()
     cv2.destroyAllWindows()
 
-    detectThread.join(1000)
-    drawThread.join(1000)
+    isolateThread.join(1)
 
+def isolateColor():
 
-def detectFaces():
-    """Detect faces in current frame"""
+        global drawFrameMod
 
-    # Modified frame for use with OpenCV
-    global frameMod, faces
+        while running:
 
-    faceCascade = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
+            frameStepSemaphore.acquire()
 
-    while running:
+            if frame is None: continue
 
-        # Skip face detection until first frame of Video Stream is found
-        if frame is None: continue
+            detectFrameMod = frame.copy()
 
-        detectFrameMod = frame.copy()
+            print detectFrameMod
 
-        # Create grayscale version of video feed for OpenCV
-        grayscale = cv2.cvtColor(detectFrameMod, cv2.COLOR_BGR2GRAY)
+            drawFrameMod = convert.toColorRange(detectFrameMod, convert.RGBtoHSVRange(convert.colorValues["Teal"]))
 
-        # Create array of faces using Haar Cascade face detection algorithm
-        faces = faceCascade.detectMultiScale(grayscale, 1.3, 5)
-
-
-def drawFaces():
-
-    global drawFrameMod
-
-    while running:
-
-        frameStepSemaphore.acquire()
-
-        if frame is None or faces is None: continue
-
-        drawFrameMod = frame.copy()
-
-        for (x, y, w, h) in faces:
-            cv2.rectangle(drawFrameMod, (x, y), (x + w, y + h), (0, 0, 255), 2)
-
-        # Denote the current frame as finished
-        drawFrameSemaphore.release()
-
+            drawFrameSemaphore.release()
 
 if __name__ == '__main__':
     main()
+
 

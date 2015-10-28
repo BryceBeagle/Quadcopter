@@ -5,9 +5,7 @@ import cv2
 #                   "Green" : ((110, 100, 100], [130, 255, 255]),
 #                   "Blue"  : ([230, 100, 100], [250, 255, 255])}
 
-colorValues = {"Red"   : [255, 0, 0],
-               "Green" : [0, 255, 0],
-               "Blue"  : [0, 0, 255]}
+
 
 convert = ImageTransformLib.ImageTransform()
 
@@ -22,7 +20,9 @@ def main():
 def getLine(testImage, color):
     """Attempts to find a line of the specified color in the supplied image."""
 
-    testImageColor = convert.toColorRange(testImage, convert.RGBtoHSVRange(colorValues["Blue"]))
+
+
+    #testImageColor = convert.toColorRange(testImage, np.array([110, 100, 100]), np.array([130, 255, 255]))
 
     cv2.namedWindow("Test", cv2.WINDOW_NORMAL)
     cv2.imshow("Test", testImageColor)

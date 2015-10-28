@@ -3,7 +3,6 @@ __author__ = 'Bryce Beagle'
 import cv2
 import numpy as np
 
-
 class ImageTransform(object):
     """ Image Transformation Class
 
@@ -11,7 +10,10 @@ class ImageTransform(object):
     """
 
     def __init__(self):
-        pass
+        self.colorValues = {"Red"   : [255,   0,   0],
+                            "Green" : [  0, 255,   0],
+                            "Teal"  : [  0, 255, 212],
+                            "Blue"  : [  0,   0, 255]}
 
 
     def toGrayscale(self, image):
@@ -26,23 +28,28 @@ class ImageTransform(object):
         return cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
 
-    def RGBtoHSVRange(self, colorRGB, hueRange=10, minSat=100, maxSat=255, minVal=100, maxVal=255):
+    def RGBtoHSVRange(self, colorRGB):
         """Convert an array containing RGB values to numpy arrays representing a range of HSV values."""
 
-        print colorRGB
+        # Default HSV color ranges
+        hueRange=100
+        minSat=40
+        maxSat=255
+        minVal=40
+        maxVal=255
 
+        # Convert the RGB array to a uint8 BGR array
         colorBGR = np.uint8([[colorRGB[::-1]]])
 
-        print colorBGR
-
+        # Convert the BGR array to an HSV array
         colorHSV = cv2.cvtColor(colorBGR, cv2.COLOR_BGR2HSV)
-        colorHSV = [[[colorHSV[[[0]]] * 2, colorHSV[[[1]]], colorHSV[[[2]]]]]]
-        print colorHSV
 
-        lowerHSV = np.array([[[colorHSV[0][0][0] - hueRange, minSat, minVal]]])
-        upperHSV = np.array([[[colorHSV[0][0][0] + hueRange, maxSat, maxVal]]])
+        # Create the upper and lower bounds for the color range
+        lowerHSV = np.array([colorHSV[0][0][0] - hueRange, minSat, minVal])
+        upperHSV = np.array([colorHSV[0][0][0] + hueRange, maxSat, maxVal])
 
-        return lowerHSV, upperHSV
+        # Return a tuple containing the upper and lower bound for the range
+        return (lowerHSV, upperHSV)
 
     def toColorRange(self, image, (lowerHSV, upperHSV)):
         """Convert a BGR Image to an image containing only values in a specific RGB color range."""
