@@ -1,7 +1,12 @@
 <component name="ProjectDictionaryState">
   <dictionary name="ignormies">
     <words>
+      <w>ardrone</w>
+      <w>frontalface</w>
       <w>grayscale</w>
+      <w>haar</w>
+      <w>haarcascade</w>
+      <w>libardrone</w>
       <w>quadcopter</w>
     </words>
   </dictionary>

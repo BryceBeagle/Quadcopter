@@ -10,6 +10,8 @@ class ImageTransform(object):
     """
 
     def __init__(self):
+
+        # Color names and ranges
         self.colorValues = {"Red"   : [255,   0,   0],
                             "Green" : [  0, 255,   0],
                             "Teal"  : [  0, 255, 212],
@@ -31,25 +33,28 @@ class ImageTransform(object):
     def RGBtoHSVRange(self, colorRGB):
         """Convert an array containing RGB values to numpy arrays representing a range of HSV values."""
 
+        # TODO: Turn into **kwargs
         # Default HSV color ranges
-        hueRange=100
-        minSat=40
-        maxSat=255
-        minVal=40
-        maxVal=255
+        hueRange      = 100
+        minSaturation = 100
+        maxSaturation = 255
+        minValue      = 100
+        maxValue      = 255
+
+        # TODO: Implement direct conversion of RGB images using COLOR_RGB2HSV
 
         # Convert the RGB array to a uint8 BGR array
-        colorBGR = np.uint8([[colorRGB[::-1]]])
+        colorBGR = np.uint8([colorRGB[::-1]])
 
         # Convert the BGR array to an HSV array
         colorHSV = cv2.cvtColor(colorBGR, cv2.COLOR_BGR2HSV)
 
         # Create the upper and lower bounds for the color range
-        lowerHSV = np.array([colorHSV[0][0][0] - hueRange, minSat, minVal])
-        upperHSV = np.array([colorHSV[0][0][0] + hueRange, maxSat, maxVal])
+        lowerHSV = np.array([colorHSV[0][0][0] - hueRange, minSaturation, minValue])
+        upperHSV = np.array([colorHSV[0][0][0] + hueRange, maxSaturation, maxValue])
 
         # Return a tuple containing the upper and lower bound for the range
-        return (lowerHSV, upperHSV)
+        return lowerHSV, upperHSV
 
     def toColorRange(self, image, (lowerHSV, upperHSV)):
         """Convert a BGR Image to an image containing only values in a specific RGB color range."""
@@ -60,6 +65,10 @@ class ImageTransform(object):
         mask = cv2.inRange(HSVImage, lowerHSV, upperHSV)
 
         return cv2.bitwise_and(image, image, mask=mask)
+
+
+    def toSmooth(self, image, blurType, ):
+        pass
 
 
     def toSkeleton(self, image):
@@ -74,11 +83,14 @@ class ImageTransform(object):
 
         while not done:
 
-            eroded = cv2.erode(image, element)
-            temp = cv2.dilate(eroded, element)
-            temp = cv2.subtract(image, temp)
+            eroded   = cv2.erode     (image,    element)
+            temp     = cv2.dilate    (eroded,   element)
+            temp     = cv2.subtract  (image,    temp)
             skeleton = cv2.bitwise_or(skeleton, temp)
-            image = eroded.copy()
+            image    = eroded.copy()
+
+            print "Image Size:", imageSize
+            print "CountNonZero:", cv2.countNonZero(image)
 
             zeros = imageSize - cv2.countNonZero(image)
             if zeros == imageSize:
