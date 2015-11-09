@@ -13,12 +13,7 @@ class ImageTransform(object):
     """
 
     def __init__(self):
-
-        # Color names and ranges
-        self.colorValues = {"Red"   : [255,   0,   0],
-                            "Green" : [  0, 255,   0],
-                            "Teal"  : [  0, 255, 212],
-                            "Blue"  : [  0,   0, 255]}
+        pass
 
 
     def toGrayscale(self, image):
