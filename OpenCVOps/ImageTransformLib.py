@@ -31,16 +31,8 @@ class ImageTransform(object):
         return cv2.cvtColor(image, conversionType)
 
 
-    def RGBtoHSVRange(self, color):
+    def RGBtoHSVRange(self, color, hueRange=10, minSaturation=100, maxSaturation=255, minValue=100, maxValue=255):
         """Convert an array containing RGB values to numpy arrays representing a range of HSV values."""
-
-        # TODO: Turn into **kwargs
-        # Default HSV color ranges
-        hueRange      = 10
-        minSaturation = 100
-        maxSaturation = 255
-        minValue      = 100
-        maxValue      = 255
 
         # TODO: Implement direct conversion of RGB images using COLOR_RGB2HSV
 
