@@ -1,7 +1,10 @@
+from OpenCVOps.ColorConstants import Colors
+
 __author__ = 'Bryce Beagle'
 
 import cv2
 import numpy as np
+
 
 class ImageTransform(object):
     """ Image Transformation Class
@@ -24,10 +27,13 @@ class ImageTransform(object):
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
-    def toHSV(self, image):
-        """Convert a BGR Image to HSV."""
+    def toHSV(self, image, conversionType=cv2.COLOR_BGR2HSV):
+        """
+        Convert a BGR Image to HSV.
+        Yeah, this function is pretty useless.
+        """
 
-        return cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        return cv2.cvtColor(image, conversionType)
 
 
     def RGBtoHSVRange(self, color):
@@ -56,24 +62,33 @@ class ImageTransform(object):
         # Return a tuple containing the upper and lower bound for the range
         return lowerHSV, upperHSV
 
+
     def toColorRange(self, image, (lowerHSV, upperHSV)):
         """Convert a BGR Image to an image containing only values in a specific RGB color range."""
 
         # Convert image to HSV
         HSVImage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
+        # Get a mask containing all pixels that fall within the Color Range
         mask = cv2.inRange(HSVImage, lowerHSV, upperHSV)
 
-        return cv2.bitwise_and(image, image, mask=mask)
+        # Combine the original picture with the mask using a bitwise-and
+        colorRangeImage = cv2.bitwise_and(image, image, mask=mask)
+
+        return colorRangeImage
+
 
     def onlyColors(self, image):
 
-        # Convert image to HSV
-        HSVImage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        # Isolate all three Color Bands
+        redChannel   = self.toColorRange(image, Colors.RED)
+        greenChannel = self.toColorRange(image, Colors.GREEN)
+        blueChannel  = self.toColorRange(image, Colors.BLUE)
 
+        # Combined all three Isolated Color Band images
+        colorizedImage = cv2.bitwise_or(cv2.bitwise_or(redChannel, greenChannel), blueChannel)
 
-    def toSmooth(self, image, blurType, ):
-        pass
+        return colorizedImage
 
 
     def toSkeleton(self, image):
