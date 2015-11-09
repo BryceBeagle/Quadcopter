@@ -1,3 +1,5 @@
+import numpy as np
+
 __author__ = 'Bryce Beagle'
 
 import cv2
@@ -53,6 +55,31 @@ class ImageDraw(object):
 
         # Return image with circles drawn
         return imageMod
+
+
+    def lines(self, imageMod, lines, lineColor, thickness=2):
+
+        for rho, theta in lines:
+
+            a  = np.cos(theta)
+            b  = np.sin(theta)
+
+            x0 = a * rho
+            y0 = b * rho
+
+            x1 = int(x0 + (1000 * -b))
+            y1 = int(y0 + (1000 *  a))
+
+            x2 = int(x0 - (1000 * -b))
+            y2 = int(y0 - (1000 *  a))
+
+            origin      = (x1, y1)
+            destination = (x2, y2)
+
+            cv2.line(imageMod, origin, destination, lineColor, thickness)
+
+        return imageMod
+
 
     # TODO: Draw triangles
     def triangles(self, imageMod, triangles, centers=True):

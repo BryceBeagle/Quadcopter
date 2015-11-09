@@ -2,6 +2,7 @@ __author__ = 'Bryce Beagle'
 
 import cv2
 from OpenCVOps import ImageTransformLib
+import numpy as np
 
 convert = ImageTransformLib.ImageTransform()
 
@@ -36,14 +37,7 @@ class ImageSearch(object):
         return identifiedCircles, identifiedTriangles
 
 
-    def HoughCircles(self, image):
-
-        # TODO: Use **kwargs
-        dp = 1
-        minDst = 50
-        param1 = 20
-        minRadius = 100
-        maxRadius = 500
+    def HoughCircles(self, image, dp=1, minDst=50, param1=20, param2=30, minRadius=100, maxRadius=500):
 
         # Initialize circles
         circles = None
@@ -57,7 +51,7 @@ class ImageSearch(object):
         imageBlurred = cv2.GaussianBlur(imageGrayscale, (7, 7), 0)
 
         # Keep attempting stricter and stricter searches until at most two circles are found
-        for i in xrange (30, 200, 10):
+        for i in xrange (param2, 200, 10):
 
             # Store detected circles in a temp variable in case current iteration finds no circles
             circlesTemp = cv2.HoughCircles(imageBlurred, cv2.cv.CV_HOUGH_GRADIENT,
@@ -77,3 +71,21 @@ class ImageSearch(object):
             if len(circles[0]) < 3 or circles is None: return circles
 
         return circles
+
+    def HoughLines(self, image):
+
+        # Initialize lines
+        lines = None
+
+        # TODO: Don't try converting already grayscale images
+
+        # Convert image to grayscale
+        imageGrayscale = convert.toGrayscale(image)
+
+        edges = cv2.Canny(imageGrayscale, 50, 150, apertureSize = 3)
+
+
+        # TODO: Use HoughLinesP
+        lines = cv2.HoughLines(edges, 1, np.pi/180, 200)
+
+        return lines
