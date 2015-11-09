@@ -41,7 +41,7 @@ class ImageDraw(object):
 
         # TODO: Implement filled circles
         for circle in circles[0][0]:
-            print circle
+
             # Draw circle
             cv2.circle(imageMod, (circle[0], circle[1]), circle[2], circleColor, circleThickness)
 

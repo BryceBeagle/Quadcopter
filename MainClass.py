@@ -1,7 +1,10 @@
-import cv2
 from threading import Thread, Semaphore
 
+import cv2
+
 from OpenCVOps import ImageTransformLib, ImageSearchLib, ImageDrawLib
+from OpenCVOps.ColorConstants import Colors
+
 
 # Import local libardrone from python-ardrone git clone
 # Note: Renamed to python-ardrone to to avoid errors
@@ -100,6 +103,8 @@ def isolateColor():
         # Acquire isolateColorSemaphore to prevent other threads prematurely taking it first
         isolateColorSemaphore.acquire()
 
+        testImageColor = convert.RGBtoHSVRange(Colors.NAVY)
+
         while running:
 
             # Wait for next frame to be acquired
@@ -111,7 +116,6 @@ def isolateColor():
             frameMod = frame.copy()
 
             # Isolate the color Teal from the current frame
-            testImageColor   = convert.RGBtoHSVRange(([110, 100, 100], [130, 255, 255]))
             isolatedFrameMod = convert.toColorRange(frameMod, testImageColor)
 
             # Release the Isolated Color frame
@@ -133,8 +137,6 @@ def identifyFeatures():
         # Search for circles in Isolated Color frame
         circles = searchFor.features(isolatedFrameMod, True)
 
-        print circles
-
         # Release the features
         identifyFeaturesSemaphore.release()
 
@@ -154,12 +156,14 @@ def drawFeatures():
         # Wait for features to be identified in latest frame
         identifyFeaturesSemaphore.acquire()
 
+        # If circles are found
         if circles[0] is not None:
 
             # Draw features on current frame
             drawFrameMod = draw.features(isolatedFrameMod, circles)
 
-        else: drawFrameMod = frame
+        # Otherwise, show unmodified Video Stream
+        else: drawFrameMod = convert.toGrayscale(isolatedFrameMod)
 
         # Release the modified frame
         drawFrameSemaphore.release()

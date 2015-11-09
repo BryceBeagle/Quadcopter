@@ -30,12 +30,12 @@ class ImageTransform(object):
         return cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
 
-    def RGBtoHSVRange(self, colorRGB):
+    def RGBtoHSVRange(self, color):
         """Convert an array containing RGB values to numpy arrays representing a range of HSV values."""
 
         # TODO: Turn into **kwargs
         # Default HSV color ranges
-        hueRange      = 100
+        hueRange      = 10
         minSaturation = 100
         maxSaturation = 255
         minValue      = 100
@@ -43,11 +43,11 @@ class ImageTransform(object):
 
         # TODO: Implement direct conversion of RGB images using COLOR_RGB2HSV
 
-        # Convert the RGB array to a uint8 BGR array
-        colorBGR = np.uint8([colorRGB[::-1]])
+        # Convert color to a 3 dimensional uint8 array
+        colorRGB = np.uint8([[color]])
 
-        # Convert the BGR array to an HSV array
-        colorHSV = cv2.cvtColor(colorBGR, cv2.COLOR_BGR2HSV)
+        # Convert the RGB array to an HSV array
+        colorHSV = cv2.cvtColor(colorRGB, cv2.COLOR_RGB2HSV)
 
         # Create the upper and lower bounds for the color range
         lowerHSV = np.array([colorHSV[0][0][0] - hueRange, minSaturation, minValue])
@@ -65,6 +65,11 @@ class ImageTransform(object):
         mask = cv2.inRange(HSVImage, lowerHSV, upperHSV)
 
         return cv2.bitwise_and(image, image, mask=mask)
+
+    def onlyColors(self, image):
+
+        # Convert image to HSV
+        HSVImage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
 
     def toSmooth(self, image, blurType, ):

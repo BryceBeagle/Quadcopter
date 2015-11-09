@@ -43,7 +43,7 @@ class ImageSearch(object):
         minDst = 50
         param1 = 20
         minRadius = 100
-        maxRadius = 400
+        maxRadius = 500
 
         # Initialize circles
         circles = None
@@ -57,7 +57,7 @@ class ImageSearch(object):
         imageBlurred = cv2.GaussianBlur(imageGrayscale, (7, 7), 0)
 
         # Keep attempting stricter and stricter searches until at most two circles are found
-        for i in xrange (60, 200, 10):
+        for i in xrange (30, 200, 10):
 
             # Store detected circles in a temp variable in case current iteration finds no circles
             circlesTemp = cv2.HoughCircles(imageBlurred, cv2.cv.CV_HOUGH_GRADIENT,
@@ -66,7 +66,7 @@ class ImageSearch(object):
                                            minRadius, maxRadius)
 
             # If HoughCircles algorithm found circles, store them
-            if circlesTemp is not None: circles = circlesTemp
+            if circlesTemp is not None: circles = circlesTemp; print circlesTemp
 
             # If HoughCircles algorithm did not find circles, return previous iteration of circles (or None in the event
             #   that circles were not found in first iteration). Any further attempts using stricter search parameters
