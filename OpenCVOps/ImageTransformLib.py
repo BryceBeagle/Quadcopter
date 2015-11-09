@@ -44,7 +44,7 @@ class ImageTransform(object):
 
         # TODO: Implement direct conversion of RGB images using COLOR_RGB2HSV
 
-        # Convert color to a 3 dimensional uint8 array
+        # Convert color to a 3 dimensional Unsigned 8 bit integer array
         colorRGB = np.uint8([[color]])
 
         # Convert the RGB array to an HSV array
