@@ -2,10 +2,10 @@ __author__ = 'Bryce Beagle'
 
 import cv2
 
-from OpenCVOps import ImageTransformLib, ImageSearchLib
+from OpenCVOps import ImageConvertLib, ImageSearchLib
 from OpenCVOps.ColorConstants import Colors, ColorRanges
 
-convert   = ImageTransformLib.ImageTransform()
+convert   = ImageConvertLib.ImageConvert()
 searchFor = ImageSearchLib.ImageSearch()
 
 def main():
@@ -53,11 +53,7 @@ def drawFeatures(image, circles=None, triangles=None):
 
     if circles is not None:
 
-        print "Circles:\n", circles
-
         for i in circles[0]:
-
-            print "i:\n", i
 
             # Draw the circle
             cv2.circle(image, (i[0], i[1]), i[2], Colors.RED, 2)
@@ -67,8 +63,6 @@ def drawFeatures(image, circles=None, triangles=None):
     cv2.imshow("Isolated Color with Identified Features", image)
 
     running = True
-
-    print "lol"
 
     while running:
 

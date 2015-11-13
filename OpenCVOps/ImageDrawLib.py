@@ -1,5 +1,3 @@
-import numpy as np
-
 __author__ = 'Bryce Beagle'
 
 import cv2
@@ -11,13 +9,13 @@ class ImageDraw(object):
         pass
 
 
-    def features(self, image, circles=None, triangles=None):
+    def features(self, image, circles=None, triangles=None, lines=None, boxes=None):
 
         # Make a copy of passed image to prevent altering of original
         imageMod = image.copy()
 
         # If circles are requested
-        if circles is not None:
+        if circles[0] is not None:
 
             # Draw circles
             imageMod = self.circles(imageMod, circles)
@@ -27,7 +25,18 @@ class ImageDraw(object):
 
             # TODO: Draw triangles
             # Draw triangles
-            imageMod = self.triangles(image, triangles)
+            imageMod = self.triangles(imageMod, triangles)
+
+        if lines is not None:
+
+            # Draw lines
+            imageMod = self.lines(imageMod, lines)
+
+        if boxes is not None:
+
+            # TODO: Draw boxes
+            # Draw boxes
+            imageMod = self.boxes(imageMod, boxes)
 
         # Return modified image
         return imageMod
@@ -36,6 +45,7 @@ class ImageDraw(object):
     def circles(self, imageMod, circles, centers=True):
 
         # TODO: Use **kwargs
+        # TODO: Use filled param
         circleColor     = (255, 0, 0)
         centerColor     = (0, 0, 255)
         circleThickness = 2
@@ -59,23 +69,13 @@ class ImageDraw(object):
 
     def lines(self, imageMod, lines, lineColor, thickness=2):
 
-        for rho, theta in lines:
+        for x1, y1, x2, y2 in lines[0]:
 
-            a  = np.cos(theta)
-            b  = np.sin(theta)
-
-            x0 = a * rho
-            y0 = b * rho
-
-            x1 = int(x0 + (1000 * -b))
-            y1 = int(y0 + (1000 *  a))
-
-            x2 = int(x0 - (1000 * -b))
-            y2 = int(y0 - (1000 *  a))
-
+            # Create origin and destination points
             origin      = (x1, y1)
             destination = (x2, y2)
 
+            # Draw line from origin point to destination point
             cv2.line(imageMod, origin, destination, lineColor, thickness)
 
         return imageMod
@@ -83,5 +83,11 @@ class ImageDraw(object):
 
     # TODO: Draw triangles
     def triangles(self, imageMod, triangles, centers=True):
+
+        return imageMod
+
+
+    # TODO: Draw boxes
+    def boxes(self, imageMod, boxes):
 
         return imageMod

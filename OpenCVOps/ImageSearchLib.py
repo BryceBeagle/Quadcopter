@@ -1,16 +1,19 @@
+import sys
+
 __author__ = 'Bryce Beagle'
 
 import cv2
-from OpenCVOps import ImageTransformLib
+from OpenCVOps import ImageConvertLib
 import numpy as np
 
-convert = ImageTransformLib.ImageTransform()
+convert = ImageConvertLib.ImageConvert()
 
 
 class ImageSearch(object):
+    """Searches within Images."""
 
-    def __init__(self):
-        pass
+    # Stupid required shit Python wants
+    def __init__(self): pass
 
 
     def features(self, image, circles=False, triangles=False):
@@ -37,7 +40,7 @@ class ImageSearch(object):
         return identifiedCircles, identifiedTriangles
 
 
-    def HoughCircles(self, image, dp=1, minDst=50, param1=20, param2=30, minRadius=100, maxRadius=500):
+    def HoughCircles(self, image, dp=1, minDst=100, param1=20, param2=50, minRadius=50, maxRadius=400):
 
         # Initialize circles
         circles = None
@@ -47,11 +50,14 @@ class ImageSearch(object):
         # Convert image to grayscale
         imageGrayscale = convert.toGrayscale(image)
 
-        # Slightly blur image to reduce
+        # Slightly blur image to reduce artifacts
         imageBlurred = cv2.GaussianBlur(imageGrayscale, (7, 7), 0)
 
+        cv2.imshow("Frame", imageBlurred)
+        cv2.waitKey(1)
+
         # Keep attempting stricter and stricter searches until at most two circles are found
-        for i in xrange (param2, 200, 10):
+        for i in xrange (param2, 120, 10):
 
             # Store detected circles in a temp variable in case current iteration finds no circles
             circlesTemp = cv2.HoughCircles(imageBlurred, cv2.cv.CV_HOUGH_GRADIENT,
@@ -60,7 +66,7 @@ class ImageSearch(object):
                                            minRadius, maxRadius)
 
             # If HoughCircles algorithm found circles, store them
-            if circlesTemp is not None: circles = circlesTemp; print circlesTemp
+            if circlesTemp is not None: circles = circlesTemp
 
             # If HoughCircles algorithm did not find circles, return previous iteration of circles (or None in the event
             #   that circles were not found in first iteration). Any further attempts using stricter search parameters
@@ -68,24 +74,22 @@ class ImageSearch(object):
             else: return circles
 
             # If fewer than 3 circles were found, return them
-            if len(circles[0]) < 3 or circles is None: return circles
+            if len(circles[0]) is 1 or circles is None: return circles
 
         return circles
 
-    def HoughLines(self, image):
+    def HoughLinesP(self, image, minLineLength=500, maxLineGap=10):
 
-        # Initialize lines
-        lines = None
+        # # Initialize lines
+        # lines = None
 
         # TODO: Don't try converting already grayscale images
 
         # Convert image to grayscale
         imageGrayscale = convert.toGrayscale(image)
-
         edges = cv2.Canny(imageGrayscale, 50, 150, apertureSize = 3)
 
-
         # TODO: Use HoughLinesP
-        lines = cv2.HoughLines(edges, 1, np.pi/180, 200)
+        lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 100, None, minLineLength, maxLineGap)
 
         return lines
