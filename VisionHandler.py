@@ -50,6 +50,8 @@ class Vision(object):
         # Close all OpenCV windows
         cv2.destroyAllWindows()
 
+        VariableHandler.drone.reset()
+
     def identifyFeatures(self):
 
         # Acquire identifyFeaturesSemaphore to prevent other threads prematurely taking it first
@@ -57,13 +59,14 @@ class Vision(object):
 
         while VariableHandler.running:
 
+            # If no frame has been captured yet, continue
             if VariableHandler.frameMod is None: continue
 
+            # Wait for a new frame
             VariableHandler.frameStepSemaphore.acquire()
 
             # Search for circles in the current isolated frame
             VariableHandler.circles = searchFor.features(VariableHandler.frame, circles = True)
 
-            print VariableHandler.circles
-
+            # Release the features for rendering to screen
             VariableHandler.identifyFeaturesSemaphore.release()

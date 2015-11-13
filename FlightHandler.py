@@ -8,32 +8,50 @@ from python_ardrone import libardrone
 
 import cv2
 import VariableHandler
+import time
 
 class Flight(object):
 
     def __init__(self):
 
-        global drone
-        drone = libardrone.ARDrone()
+        VariableHandler.drone.speed = .1
+        VariableHandler.drone.takeoff()
 
         while VariableHandler.running:
+
+            if VariableHandler.circles is None: continue
 
             # TODO: Update for line colors and altitude change
             if VariableHandler.circles[0] is not None:
 
-                if self.distanceFromCenter(VariableHandler.circles[0][0], VariableHandler.circles[0][1]) < 50:
-                    self.maintainAltitude()
+                print "blah"
+
+                distance = self.distanceFromCenter(VariableHandler.circles[0][0][0][0],
+                                                   VariableHandler.circles[0][0][0][1])
+
+                # if distance < 50:
+                self.maintainAltitude()
+                # else: print distance
 
 
     def maintainAltitude(self):
 
-        desiredRadius = 300
+        desiredRadius = 200
+        print "sds"
 
-        if VariableHandler.circles[0][2] < desiredRadius - 30:
-            drone.move(0, 0, 0, -0.1, 0)
-        elif VariableHandler.circles[0][2] > desiredRadius + 30:
-            drone.move(0, 0, 0,  0.1, 0)
-        else: drone.hover()
+        if VariableHandler.circles[0][0][0][2] < desiredRadius - 30:
+            print "Down"
+            VariableHandler.drone.move_down()
+
+        elif VariableHandler.circles[0][0][0][2] > desiredRadius + 30:
+            print "Up"
+            VariableHandler.drone.move_up()
+
+        else:
+            VariableHandler.drone.hover()
+            print "Hover"
+
+        time.sleep(.1)
 
 
     def followLine(self):
@@ -44,12 +62,10 @@ class Flight(object):
 
         pass
 
-    def distance(self, x, y):
+    def distanceFromCenter(self, x, y):
 
-        length, height, _ =  VariableHandler.frame.shape
-
-        screenCenterX = length / 2
-        screenCenterY = height / 2
+        screenCenterX = VariableHandler.bellyWidth  / 2
+        screenCenterY = VariableHandler.bellyHeight / 2
 
         distance = math.sqrt((screenCenterX - x)**2 + (screenCenterY - y)**2)
 

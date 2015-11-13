@@ -6,16 +6,13 @@ from python_ardrone import libardrone
 import FlightHandler
 import VisionHandler
 import DisplayHandler
-
-# flight = FlightHandler.Flight()
+import VariableHandler
 
 
 def main():
 
-    drone = libardrone.ARDrone()
-
     # Use the belly camera
-    libardrone.at_config(drone.seq_nr + 1, "video:video_channel", 1)
+    libardrone.at_config(VariableHandler.drone.seq_nr + 1, "video:video_channel", 1)
 
     # Create threads for each routine
     visionThread  = Thread(target = Vision)
@@ -40,7 +37,7 @@ def Display():
 
 def Flight():
 
-    pass
+    FlightHandler.Flight()
 
 
 if __name__ == "__main__" :
