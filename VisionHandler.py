@@ -1,20 +1,22 @@
 __author__ = 'Bryce Beagle'
 
 import cv2
-import VariableHandler
+import VariableHandler as vh
 
 from threading import Thread
-from OpenCVOps import ImageConvertLib, ImageSearchLib  # , FeatureTrackLib
+from OpenCVOps import ImageConvertLib, ImageSearchLib
+
 
 # TODO: Fix boundingBoxes and circle detections overlap
 
 
-class Vision(object):
+class Vision(Thread):
     """Main thread which handles getting video from Quadcopter Stream"""
+    
+    def run(self):
 
-    def __init__(self):
-
-        VariableHandler.drawFrameSemaphore.acquire()
+        # Video IP address and port that the ARDrone 2.0 uses to output the Video Stream
+        videoIP = 'tcp://192.168.1.1:5555'
 
         global convert, searchFor
         convert   = ImageConvertLib.ImageConvert()
@@ -23,26 +25,23 @@ class Vision(object):
         identifyThread = Thread(target = self.identifyFeatures)
         identifyThread.start()
 
-        # Video IP address and port that the ARDrone 2.0 uses to output the Video Stream
-        videoIP = 'tcp://192.168.1.1:5555'
-
         # Get Video Stream from Quadcopter
         videoStream = cv2.VideoCapture(videoIP)
 
-        while VariableHandler.running:
+        while vh.running:
 
             # Get current frame of Video Stream
-            VariableHandler.running, VariableHandler.frame = videoStream.read()
+            vh.running, vh.frame = videoStream.read()
 
-            # # Release the frame
-            VariableHandler.frameStepSemaphore.release()
+            # Release the frame and immediately lock the next
+            vh.frameStepEvent.set()
+            vh.frameStepEvent.clear()
 
             # If no frame has been captured yet, continue
-            if VariableHandler.frame is None: continue
+            if vh.frame is None: continue
 
             # Create a copy of the original frame to edit
-            VariableHandler.frameMod = VariableHandler.frame.copy()
-
+            vh.frameMod = vh.frame.copy()
 
         # Release the video stream
         videoStream.release()
@@ -50,23 +49,23 @@ class Vision(object):
         # Close all OpenCV windows
         cv2.destroyAllWindows()
 
-        VariableHandler.drone.reset()
-
     def identifyFeatures(self):
 
-        # Acquire identifyFeaturesSemaphore to prevent other threads prematurely taking it first
-        VariableHandler.identifyFeaturesSemaphore.acquire()
-
-        while VariableHandler.running:
+        while vh.running:
 
             # If no frame has been captured yet, continue
-            if VariableHandler.frameMod is None: continue
+            if vh.frameMod is None: continue
 
-            # Wait for a new frame
-            VariableHandler.frameStepSemaphore.acquire()
+            # Wait for a new frame to be released
+            vh.frameStepEvent.wait()
 
             # Search for circles in the current isolated frame
-            VariableHandler.circles = searchFor.features(VariableHandler.frame, circles = True)
+            vh.circlesTemp = searchFor.features(vh.frame, circles = True)
 
-            # Release the features for rendering to screen
-            VariableHandler.identifyFeaturesSemaphore.release()
+            # Extract the circles from the unnecessary surrounding layers
+            if vh.circlesTemp[0] is not None:
+                vh.circles = vh.circlesTemp[0][0]
+
+            # Release the features for rendering to screen and immediately lock them again
+            vh.identifyFeaturesEvent.set()
+            vh.identifyFeaturesEvent.clear()

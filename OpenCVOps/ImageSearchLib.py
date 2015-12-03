@@ -40,7 +40,7 @@ class ImageSearch(object):
         return identifiedCircles, identifiedTriangles
 
 
-    def HoughCircles(self, image, dp=1, minDst=100, param1=20, param2=50, minRadius=50, maxRadius=400):
+    def HoughCircles(self, image, dp=1, minDst=100, param1=30, param2=60, minRadius=50, maxRadius=400):
 
         # Initialize circles
         circles = None
@@ -52,9 +52,6 @@ class ImageSearch(object):
 
         # Slightly blur image to reduce artifacts
         imageBlurred = cv2.GaussianBlur(imageGrayscale, (7, 7), 0)
-
-        cv2.imshow("Frame", imageBlurred)
-        cv2.waitKey(1)
 
         # Keep attempting stricter and stricter searches until at most two circles are found
         for i in xrange (param2, 120, 10):

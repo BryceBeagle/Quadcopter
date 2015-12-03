@@ -1,75 +1,95 @@
-import math
-
 __author__ = 'Bryce Beagle'
 
-# Import local libardrone from python-ardrone git clone
-# Note: Renamed to python-ardrone to to avoid errors
-from python_ardrone import libardrone
+import VariableHandler as vh
 
-import cv2
-import VariableHandler
-import time
+from threading import Thread
 
-class Flight(object):
 
-    def __init__(self):
+class Flight(Thread):
 
-        VariableHandler.drone.speed = .1
-        VariableHandler.drone.takeoff()
+    def run(self):
 
-        while VariableHandler.running:
+        vh.drone.takeoff()
 
-            if VariableHandler.circles is None: continue
+        while vh.running:
+
+            navdata = vh.drone.navdata
+            print navdata
+
+            # Wait for Features to be processed at least once
+            vh.identifyFeaturesEvent.wait()
+
+            if vh.circles is None: continue
 
             # TODO: Update for line colors and altitude change
-            if VariableHandler.circles[0] is not None:
+            # TODO: Slow down checks to once per frame
+            if vh.circles[0] is not None:
 
-                print "blah"
+                navdata = vh.drone.navdata
+                print navdata
 
-                distance = self.distanceFromCenter(VariableHandler.circles[0][0][0][0],
-                                                   VariableHandler.circles[0][0][0][1])
-
-                # if distance < 50:
+                # vh.drone.land()
                 self.maintainAltitude()
-                # else: print distance
+
+            else:
+                vh.drone.hover()
+
+        vh.drone.land()
+        vh.drone.halt()
 
 
     def maintainAltitude(self):
 
-        desiredRadius = 200
-        print "sds"
+        CircleX = vh.circles[0][0]
+        CircleY = vh.circles[0][1]
+        CircleR = vh.circles[0][2]
 
-        if VariableHandler.circles[0][0][0][2] < desiredRadius - 30:
-            print "Down"
-            VariableHandler.drone.move_down()
+        print CircleX, CircleY, CircleR
 
-        elif VariableHandler.circles[0][0][0][2] > desiredRadius + 30:
-            print "Up"
-            VariableHandler.drone.move_up()
-
+        # Vertical Movement
+        if CircleR < vh.desiredHoverRadius - vh.horizontalTolerance:
+            print "Down",
+            vh.upDown = -1
+        elif CircleR > vh.desiredHoverRadius + vh.horizontalTolerance:
+            print "Up",
+            vh.upDown = 1
         else:
-            VariableHandler.drone.hover()
-            print "Hover"
+            print "Hover Vertically",
+            vh.upDown = 0
 
-        time.sleep(.1)
+        # Left-Right Movement
+        if CircleX < ((vh.bellyWidth / 2) - vh.horizontalTolerance):
+            print "Right",
+            vh.leftRight = 1
+        elif CircleX > ((vh.bellyWidth / 2) + vh.horizontalTolerance):
+            print "Left",
+            vh.leftRight = -1
+        else:
+            print "Hover Laterally",
+            vh.leftRight = 0
 
+        # Forward-Backward Movement
+        if CircleY < ((vh.bellyHeight / 2) - vh.verticalTolerance):
+            print "Backward"
+            vh.forWardBackward = -1
+        elif CircleY > ((vh.bellyHeight / 2) + vh.verticalTolerance):
+            print "Forward"
+            vh.forwardBackward = 1
+        else:
+            print "Hover Horizontally"
+            vh.forwardBackward = 0
 
-    def followLine(self):
+        # Move drone
+        vh.drone.move(vh.leftRight, vh.forwardBackward, vh.upDown, 0)
 
-        pass
-
-    def spin(self):
-
-        pass
-
-    def distanceFromCenter(self, x, y):
-
-        screenCenterX = VariableHandler.bellyWidth  / 2
-        screenCenterY = VariableHandler.bellyHeight / 2
-
-        distance = math.sqrt((screenCenterX - x)**2 + (screenCenterY - y)**2)
-
-        return distance
+    # def distanceFromCenter(self, x, y):
+    #
+    #     screenCenterX = vh.bellyWidth  / 2
+    #     screenCenterY = vh.bellyHeight / 2
+    #
+    #     distance = math.sqrt((screenCenterX - x)**2 + (screenCenterY - y)**2)
+    #
+    #     return distance
 
 #
 #

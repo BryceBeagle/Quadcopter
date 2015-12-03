@@ -8,6 +8,7 @@ from OpenCVOps.ColorConstants import Colors, ColorRanges
 convert   = ImageConvertLib.ImageConvert()
 searchFor = ImageSearchLib.ImageSearch()
 
+
 def main():
 
     testImage = cv2.imread('TestLine.jpg')
