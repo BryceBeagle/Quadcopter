@@ -28,6 +28,10 @@ class ImageConvert(object):
 
         return cv2.cvtColor(image, conversionType)
 
+    def RGBtoBGR(self, (red, green, blue)):
+
+        return blue, green, red
+
 
     def RGBtoHSVRange(self, color, hueRange=10, minSaturation=100, maxSaturation=255, minValue=100, maxValue=255):
         """Convert an array containing RGB values to numpy arrays representing a range of HSV values."""

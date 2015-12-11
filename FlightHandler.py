@@ -1,6 +1,7 @@
 __author__ = 'Bryce Beagle'
 
 import VariableHandler as vh
+import math
 
 from threading import Thread
 
@@ -9,12 +10,16 @@ class Flight(Thread):
 
     def run(self):
 
+        # # Ensure that the Quadcopter is not in an Emergency Stop state
+        # vh.drone.reset()
+
+        # Wait for camera
+        vh.frameStepEvent.wait()
+
+        # Takeoff
         vh.drone.takeoff()
 
         while vh.running:
-
-            navdata = vh.drone.navdata
-            print navdata
 
             # Wait for Features to be processed at least once
             vh.identifyFeaturesEvent.wait()
@@ -25,18 +30,16 @@ class Flight(Thread):
             # TODO: Slow down checks to once per frame
             if vh.circles[0] is not None:
 
-                navdata = vh.drone.navdata
-                print navdata
-
                 # vh.drone.land()
-                self.maintainAltitude()
+                self.preciseMaintainAltitude()
+                # self.maintainAltitude()
 
             else:
                 vh.drone.hover()
 
+        # When the program ends, land the quadcopter
         vh.drone.land()
         vh.drone.halt()
-
 
     def maintainAltitude(self):
 
@@ -44,13 +47,11 @@ class Flight(Thread):
         CircleY = vh.circles[0][1]
         CircleR = vh.circles[0][2]
 
-        print CircleX, CircleY, CircleR
-
         # Vertical Movement
-        if CircleR < vh.desiredHoverRadius - vh.horizontalTolerance:
+        if CircleR < vh.desiredR - vh.horizontalTolerance:
             print "Down",
             vh.upDown = -1
-        elif CircleR > vh.desiredHoverRadius + vh.horizontalTolerance:
+        elif CircleR > vh.desiredR + vh.horizontalTolerance:
             print "Up",
             vh.upDown = 1
         else:
@@ -82,14 +83,52 @@ class Flight(Thread):
         # Move drone
         vh.drone.move(vh.leftRight, vh.forwardBackward, vh.upDown, 0)
 
-    # def distanceFromCenter(self, x, y):
-    #
-    #     screenCenterX = vh.bellyWidth  / 2
-    #     screenCenterY = vh.bellyHeight / 2
-    #
-    #     distance = math.sqrt((screenCenterX - x)**2 + (screenCenterY - y)**2)
-    #
-    #     return distance
+    def preciseMaintainAltitude(self):
+
+        # Get first (best) circle from circle array
+        vh.circleX = vh.circles[0][0]
+        vh.circleY = vh.circles[0][1]
+        vh.circleR = vh.circles[0][2]
+
+        self.setSpeed(vh.circleX, vh.circleY, vh.circleR)
+
+        # Move drone
+        vh.drone.move(vh.leftRight, vh.forwardBackward, vh.upDown, 0)
+
+        # print "Left-Right:", vh.leftRight,
+        # print "Forward-Backward:", vh.forwardBackward,
+        # print "Up-Down:", vh.upDown
+
+
+    # TODO: Convert to lambda
+    # TODO: Move to library
+    def setSpeed(self, circleX, circleY, circleR):
+
+        distanceX, distanceY, distanceR = self.distanceFromCenter(circleX, circleY, circleR)
+
+        proportionalDistanceX = distanceX / vh.desiredR
+        proportionalDistanceY = distanceY / vh.desiredR
+        proportionalDistanceV = distanceR / vh.desiredR
+
+        # print "Distance P X:", proportionalDistanceX,
+        # print "Distance P Y:", proportionalDistanceY,
+        # print "Distance P R:", proportionalDistanceV
+
+        vh.leftRight       =  .05 * math.atan(proportionalDistanceX * .4) / (math.pi / 2) - .015
+        vh.forwardBackward =  .05 * math.atan(proportionalDistanceY * .4) / (math.pi / 2)
+        vh.upDown          =  .4  * math.atan(proportionalDistanceV * .4) / (math.pi / 2) - .01
+
+
+    def distanceFromCenter(self, circleX, circleY, circleR):
+
+        screenCenterX = vh.bellyWidth  / 2
+        screenCenterY = vh.bellyHeight / 2
+
+        distanceX = circleX - screenCenterX
+        distanceY = circleY - screenCenterY
+        distanceR = circleR - vh.desiredR
+
+        return distanceX, distanceY, distanceR
 
 #
 #

@@ -30,16 +30,23 @@ identifyFeaturesEvent = Event()
 drawFrameEvent        = Event()
 
 # Belly Camera Dimensions
-bellyWidth  = 360
-bellyHeight = 640
+bellyWidth  = 640
+bellyHeight = 360
 
 # Flight Constants
-desiredHoverRadius  = 100
-hoverTolerance      = 20
-horizontalTolerance = 0
-verticalTolerance   = 0
+desiredX = bellyWidth  / 2
+desiredY = bellyHeight / 2
+desiredR = 75
+
+# Current Positions
+circleX = None
+circleY = None
+circleR = None
 
 # Movement values
 upDown          = 0
 leftRight       = 0
 forwardBackward = 0
+
+horizontalTolerance = 0
+verticalTolerance   = 0

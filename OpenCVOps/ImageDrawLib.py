@@ -1,6 +1,9 @@
 __author__ = 'Bryce Beagle'
 
 import cv2
+from OpenCVOps import ImageConvertLib
+
+convert = ImageConvertLib.ImageConvert()
 
 
 class ImageDraw(object):
@@ -30,7 +33,7 @@ class ImageDraw(object):
         if lines is not None:
 
             # Draw lines
-            imageMod = self.lines(imageMod, lines)
+            imageMod = self.lines(imageMod, lines, lineColor=(0,0,0))
 
         if boxes is not None:
 
@@ -39,6 +42,27 @@ class ImageDraw(object):
             imageMod = self.boxes(imageMod, boxes)
 
         # Return modified image
+        return imageMod
+
+    def movementVector(self, image, (currentPosX, currentPosY), (desiredPosX, desiredPosY), arrowColorRGB):
+
+        imageMod = image.copy()
+
+        arrowColorBGR = convert.RGBtoBGR(arrowColorRGB)
+
+        cv2.arrowedLine(imageMod, (currentPosX, currentPosY), (desiredPosX, desiredPosY), arrowColorBGR, thickness=3)
+
+        return imageMod
+
+
+    def speedText(self, image, speedX, speedY, speedV):
+
+        imageMod = image.copy()
+
+        cv2.putText(imageMod, "Speed X: " + str(speedX), (  5, 355), cv2.FONT_HERSHEY_COMPLEX, .4, (0, 0, 255))
+        cv2.putText(imageMod, "Speed Y: " + str(speedY), (230, 355), cv2.FONT_HERSHEY_COMPLEX, .4, (0, 0, 255))
+        cv2.putText(imageMod, "Speed V: " + str(speedV), (455, 355), cv2.FONT_HERSHEY_COMPLEX, .4, (0, 0, 255))
+
         return imageMod
 
 
@@ -55,7 +79,11 @@ class ImageDraw(object):
         for circle in circles:
 
             # Draw circle
-            cv2.circle(imageMod, (circle[0], circle[1]), circle[2], circleColor, circleThickness)
+            try:
+
+                cv2.circle(imageMod, (circle[0], circle[1]), circle[2], circleColor, circleThickness)
+
+            except: print "Error:", circle
 
             # If circle centers are desired
             if centers is True:

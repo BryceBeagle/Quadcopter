@@ -3,7 +3,7 @@ __author__ = 'Bryce Beagle'
 import VariableHandler as vh
 
 from threading import Thread
-from OpenCVOps import ImageDrawLib
+from OpenCVOps import ImageDrawLib, ColorConstants
 
 # TODO: Remove all direct references to cv2
 import cv2
@@ -29,12 +29,18 @@ class Display(Thread):
             vh.frameStepEvent.wait()
 
             # Skip canvas drawing until first frame of Video Stream is found
-            if vh.frameMod is None: continue
+            if vh.frame is None: continue
 
             if vh.circles is not None:
 
                 # Draw features on current frame
-                vh.frameMod = draw.features(vh.frameMod, circles=vh.circles)
+                vh.frameMod = draw.features(vh.frame, circles=vh.circles)
+
+                # Draw information on current frame
+                vh.frameMod = draw.movementVector(vh.frameMod, (vh.desiredX, vh.desiredY), (vh.circleX,  vh.circleY),
+                                                  ColorConstants.Colors.GREEN)
+
+                vh.frameMod = draw.speedText(vh.frameMod, vh.leftRight, vh.forwardBackward, vh.upDown)
 
             # Otherwise, show unmodified Video Stream
             else: vh.frameMod = vh.frame
